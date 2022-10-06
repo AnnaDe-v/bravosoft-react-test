@@ -2,7 +2,7 @@ import { signInWithEmailAndPassword, signOut } from "firebase/auth";
 import React, { useCallback, useContext, useState } from "react";
 import {useNavigate } from "react-router-dom";
 import { auth } from "./firebase/firebase";
-import { AuthContext } from "./firebase/useAuth";
+import { AuthContext } from "./firebase/AuthProvider";
 
 const Login = () => {
     const [loginEmail, setLoginEmail] = useState("");
@@ -38,7 +38,6 @@ const Login = () => {
 
   if (currentUser) {
     return navigate("/")
-    
   }
 
   return (
