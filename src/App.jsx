@@ -6,8 +6,8 @@ import "./App.css";
 function App() {
   const [ordersData, setOrdersData] = useState([]);
   const [textOrder, setTextOrder] = useState("");
-  const [countOrder, setCountOrder] = useState(1);
   const [textSelect, setTextSelect] = useState("Иванов И. И.");
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(false);
 
   useEffect(() => {
@@ -32,43 +32,46 @@ function App() {
     console.log(textSelect);
   }
 
-  const addNewOrder = () => {
-    
-    const name = textSelect;
-    const documentName = textOrder;
-    console.log("click");
-    return createOrder({ name, documentName })
-      .then(() => getOrders())
-      .then((orders) => {
-        setOrdersData(orders);
-        setTextOrder("");
-      })
-      .catch((err) => {
-        setError(true);
-        console.error(err);
-      });
+  const addNewOrder = (event) => {
+    const name = textSelect
+    const documentName = textOrder
+    event.preventDefault()
+    if (ordersData.filter(
+        (x) => x["name"] === textSelect && x["documentName"] === textOrder
+      ) == false
+    ) {
+      setError(false);
+      setIsLoading(true)
+      console.log("Yep");
+      return createOrder({ name, documentName })
+        .then(() => getOrders())
+        .then((orders) => {
+          setOrdersData(orders)
+          setTextOrder("");
+        })
+        .catch((err) => {
+          setError(true)
+          console.error(err)
+        })
+        .finally(
+          setError(false)
+        )
+    } else {
+      setError(true)
+    }
   };
-
-  // const filteredOrdersData = ordersData.map()
 
   const filteredOrdersData = ordersData.reduce(function (o, i) {
     if (!o.hasOwnProperty(i["documentName"])) {
       o[i["documentName"]] = 0;
     }
     o[i["documentName"]]++;
-    console.log('o :',o);
     return o;
   }, {});
 
-
-
-  var ordersResult = Object.keys(filteredOrdersData).map(function (id) {
-
+  const ordersResult = Object.keys(filteredOrdersData).map(function (id) {
     return { id: id, count: filteredOrdersData[id] };
   });
-  console.log('result :', ordersResult);
-
-
 
   return (
     <>
@@ -85,16 +88,20 @@ function App() {
               onChange={handleEditInputValue}
               value={textOrder}
             />
+
             <button onClick={addNewOrder}>add order</button>
+
+            {isLoading && <div>Loading...</div>}
+            {error && <div>Вы уже оставляли заявку на данный документ</div>}
           </div>
         </section>
         <section className="order-table">
           <div className="container">
-            <h2>Order's table</h2>
+            <h2 className="order-table__item">Order's table</h2>
             {ordersResult.map((order, index) => (
               <div key={index}>
-              <div>{order.id}</div>
-              <div>{order.count}</div>
+                <div>{order.id}</div>
+                <div>{order.count}</div>
               </div>
             ))}
           </div>
