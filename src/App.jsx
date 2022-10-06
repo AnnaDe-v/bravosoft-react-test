@@ -1,9 +1,62 @@
+import { createUserWithEmailAndPassword, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "firebase/auth";
 import { useEffect, useState } from "react";
 import { createOrder } from "./api/createOrder";
 import { getOrdersData } from "./api/getOrders";
 import "./App.css";
+import { auth } from "./firebase/firebase";
 
 function App() {
+  const [registerEmail, setRegisterEmail] = useState("");
+  const [registerPassword, setRegisterPassword] = useState("");
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+
+  const [user, setUser] = useState({});
+
+
+
+
+
+  const register = async () => {
+    try {
+      const user = await createUserWithEmailAndPassword(
+        auth,
+        registerEmail,
+        registerPassword
+      );
+      console.log(user);
+    } catch (error) {
+      console.log(error.message);
+    }
+  };
+
+  const login = async () => {
+    try {
+      const user = await signInWithEmailAndPassword(
+        auth,
+        loginEmail,
+        loginPassword
+      );
+      console.log(user);
+    } catch (error) {
+      console.log(error.message);
+    }
+  };
+
+  const logout = async () => {
+    await signOut(auth);
+  };
+
+  function setRegisterEmailHandler(e) {
+    setRegisterEmail(e.currentTarget.value);
+  }
+  function setRegisterPasswordHandler(e) {
+    setRegisterPassword(e.currentTarget.value);
+  }
+  
+
+
+
   const [ordersData, setOrdersData] = useState([]);
   const [textOrder, setTextOrder] = useState("");
   const [textSelect, setTextSelect] = useState("Иванов И. И.");
@@ -12,6 +65,9 @@ function App() {
 
   useEffect(() => {
     getOrders();
+    onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    })
   }, []);
 
   const getOrders = () => {
@@ -29,35 +85,34 @@ function App() {
 
   function handleSelectValue(e) {
     setTextSelect(e.target.value);
-    console.log(textSelect);
   }
 
-  const addNewOrder = (event) => {
-    const name = textSelect
-    const documentName = textOrder
-    event.preventDefault()
-    if (ordersData.filter(
+  const addNewOrder = (e) => {
+    e.preventDefault()
+    const name = textSelect;
+    const documentName = textOrder;
+    console.log(textSelect, textOrder);
+    if (
+      ordersData.filter(
         (x) => x["name"] === textSelect && x["documentName"] === textOrder
       ) == false
     ) {
       setError(false);
-      setIsLoading(true)
+      setIsLoading(true);
       console.log("Yep");
       return createOrder({ name, documentName })
         .then(() => getOrders())
         .then((orders) => {
-          setOrdersData(orders)
+          setOrdersData(orders);
           setTextOrder("");
         })
         .catch((err) => {
-          setError(true)
-          console.error(err)
+          setError(true);
+          console.error(err);
         })
-        .finally(
-          setError(false)
-        )
+        .finally(setError(false));
     } else {
-      setError(true)
+      setError(true);
     }
   };
 
@@ -75,6 +130,48 @@ function App() {
 
   return (
     <>
+      <div className="Auth">
+        <div>
+          <h3> Register User </h3>
+          <input
+            placeholder="Email..."
+            onChange={setRegisterEmailHandler}
+          />
+          <input
+            placeholder="Password..."
+            onChange={setRegisterPasswordHandler}
+          />
+
+          <button onClick={register}> Create User</button>
+        </div>
+
+        <div>
+          <h3> Login </h3>
+          <input
+            placeholder="Email..."
+            onChange={(event) => {
+              setLoginEmail(event.target.value);
+            }}
+          />
+          <input
+            placeholder="Password..."
+            onChange={(event) => {
+              setLoginPassword(event.target.value);
+            }}
+          />
+
+          <button onClick={login}> Login</button>
+        </div>
+
+        <h4> User Logged In: </h4>
+        {user?.email}
+
+        <button onClick={logout}> Sign Out </button>
+      </div>
+
+
+
+
       <div className="App">
         <section className="order-form">
           <div className="container">
