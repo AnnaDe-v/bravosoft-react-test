@@ -1,78 +1,33 @@
-import React, {
-	createContext,
-	useState,
-	useEffect,
-	useMemo,
-	useContext,
-} from 'react'
-import { onAuthStateChanged } from '@firebase/auth'
-import { authentication, login, logout } from './firebase'
-import { conversations } from '../components/conversations/Conversations'
+import { onAuthStateChanged } from "firebase/auth";
+import React, { useEffect, useState } from "react";
 
 
-const AuthContext = createContext({})
-
+export const AuthContext = React.createContext();
 
 export const AuthProvider = ({ children }) => {
-	const [user, setUser] = useState(null)
-	const [isLoadingInitial, setIsLoadingInitial] = useState(true)
-	const [isLoading, setIsLoading] = useState(false)
+  const [currentUser, setCurrentUser] = useState(null);
+  const [pending, setPending] = useState(true);
+  const [user, setUser] = useState({});
 
-	const loginHandler = async (email, password) => {
-		setIsLoading(true)
-		try {
-			await login(email, password)
-		} catch (error) {
-			alert(error)
-		} finally {
-			setIsLoading(false)
-		}
-	}
 
-	const logoutHandler = async () => {
-		setIsLoading(true)
-		try {
-			await logout()
-		} catch (error) {
-			alert(error)
-		} finally {
-			setIsLoading(false)
-		}
-	}
+  useEffect(() => {
+    onAuthStateChanged((user) => {
+      setCurrentUser(user)
+      setPending(false)
+    });
+  }, []);
 
-	useEffect(
-		() =>
-			onAuthStateChanged(authentication, user => {
-				if (user) {
-					setUser({
-						...user,
-						avatar: conversations.find(c => c.userId === user.uid).image,
-					})
-				} else {
-					setUser(null)
-				}
+  if(pending){
+    return <>Loading...</>
+  }
 
-				setIsLoadingInitial(false)
-			}),
-
-		[]
-	)
-
-	const values = useMemo(
-		() => ({
-			user,
-			isLoading,
-			login: loginHandler,
-			logout: logoutHandler,
-		}),
-		[user, isLoading]
-	)
-
-	return (
-		<AuthContext.Provider value={values}>
-			{isLoadingInitial && children}
-		</AuthContext.Provider>
-	)
-}
-
-export const useAuth = () => useContext(AuthContext)
+  return (
+    <AuthContext.Provider
+      value={{
+        currentUser
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
+};

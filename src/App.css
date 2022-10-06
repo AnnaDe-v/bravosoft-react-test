@@ -21,3 +21,18 @@ body {
   align-items: center;
   text-align: center;
 }
+
+
+.order-table__row {
+  background-color: burlywood;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 60px 0 60px;
+}
+
+.order-table__description {
+  font-weight: bold;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 60px 0 60px;
+}
